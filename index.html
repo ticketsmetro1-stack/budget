@@ -430,4 +430,16 @@ render();
       .catch((err) => console.error("⚠️ Service Worker failed:", err));
   }
 </script>
+  <script>
+  const params = new URLSearchParams(window.location.search);
+  const entry = params.get("entry");
+
+  if (entry) {
+    // Example: auto-fill an input field if it exists
+    const box = document.getElementById("myInput");
+    if (box) {
+      box.value = entry;
+    }
+  }
+</script>
 </html>
