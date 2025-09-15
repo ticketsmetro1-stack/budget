@@ -1,272 +1,174 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Budget App (EGP)</title>
-  <!-- iOS Home screen meta -->
-  <link rel="apple-touch-icon" href="icon.png">
-  <meta name="apple-mobile-web-app-title" content="BudgetEGP">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>💰 Budget App (EGP)</title>
+  <link rel="manifest" href="manifest.json" />
   <style>
-    /* Base */
-    :root{ --bg:#f6f7fb; --card:#fff; --muted:#6b7280; --accent:#2563eb; }
-    *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;}
-    body{margin:0;background:var(--bg);color:#0f172a;padding:18px;}
-    h1{margin:0 0 12px;text-align:center;font-size:20px;}
-
-    /* Form card */
-    .form-card{
-      max-width:720px;margin:0 auto 18px;background:var(--card);padding:14px;border-radius:12px;box-shadow:0 4px 20px rgba(16,24,40,0.04);
+    body {
+      font-family: sans-serif;
+      background: #f9fafb;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
     }
-    .row{display:flex;gap:10px;align-items:center;}
-    .col{display:flex;flex-direction:column;gap:8px;}
-    input[type="text"], input[type="number"], select, input[type="color"]{
-      padding:10px;border-radius:10px;border:1px solid #e6e9ef;font-size:15px;width:100%;
+    header {
+      background: #4caf50;
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      font-size: 1.2rem;
+      font-weight: bold;
     }
-    button.primary{background:var(--accent);color:#fff;border:0;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer;}
-    .small{font-size:13px;color:var(--muted);}
-
-    /* Goals grid */
-    .goals-container{
-      max-width:980px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;
+    main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
     }
-
-    .goal-card{
-      background:var(--card);padding:14px;border-radius:12px;box-shadow:0 4px 14px rgba(16,24,40,0.04);position:relative;
+    .goal {
+      background: white;
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-
-    .goal-title{font-weight:700;font-size:18px;margin:0 0 6px;}
-    .muted{color:var(--muted);font-size:14px;margin:2px 0;}
-    .progress-row{display:flex;align-items:center;gap:10px;margin-top:8px;}
-    .bar-wrap{flex:1;background:#eef2ff;border-radius:999px;padding:6px;}
-    .bar{height:12px;border-radius:999px;width:0%;transition:width .25s ease;}
-
-    .percent{min-width:40px;text-align:right;font-weight:600;font-size:13px;color:#0f172a;}
-
-    /* action buttons at bottom of card */
-    .card-actions{display:flex;gap:8px;margin-top:12px;}
-    .card-actions button{flex:1;padding:10px;border-radius:10px;border:1px solid #e6e9ef;background:#fff;cursor:pointer;font-weight:700;}
-    .btn-add{background:#10b981;color:#fff;border:0;}
-    .btn-edit{background:#f59e0b;color:#fff;border:0;}
-    .delete-icon{position:absolute;right:10px;top:10px;border-radius:8px;border:0;background:transparent;cursor:pointer;font-size:16px;color:#b91c1c;}
-
-    /* responsive: force a 2-column grid on small screens (mobile) */
-    @media (max-width:600px){
-      .goals-container{grid-template-columns:repeat(2,1fr);}
+    .goal h3 { margin: 0 0 0.5rem 0; font-size: 1rem; }
+    .progress {
+      height: 12px;
+      background: #eee;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+    .progress-bar {
+      height: 100%;
+      background: #4caf50;
+      width: 0%;
+      transition: width 0.3s;
+    }
+    footer {
+      background: #fff;
+      border-top: 1px solid #ddd;
+      padding: 0.75rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+    footer input, footer button {
+      flex: 1;
+      padding: 0.5rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    footer button {
+      flex: 0 0 auto;
+      background: #4caf50;
+      color: white;
+      border: none;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <h1>💰 Budget App (EGP)</h1>
-
-  <div class="form-card" aria-label="Add goal">
-    <div class="col">
-      <label class="small">Goal name</label>
-      <input id="goalName" type="text" placeholder="e.g., Laptop">
-
-      <label class="small">Goal amount (EGP)</label>
-      <input id="goalAmount" type="number" placeholder="5000">
-
-      <label class="small">Color</label>
-      <div class="row">
-        <input id="goalColor" type="color" value="#10b981" style="width:64px;padding:8px;">
-        <div style="flex:1"></div>
-        <button class="primary" id="addGoalBtn">Add Goal</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="goals-container" id="goalsContainer" aria-live="polite"></div>
+  <header>💰 Budget App (EGP)</header>
+  <main id="goalList"></main>
+  <footer>
+    <input id="goalName" placeholder="Goal name"/>
+    <input id="goalTarget" type="number" placeholder="Target"/>
+    <button onclick="addGoal()">Add</button>
+  </footer>
+  <footer>
+    <input id="spendAmount" type="number" placeholder="Spent amount"/>
+    <button onclick="spendFromFirst()">Spend</button>
+  </footer>
 
   <script>
-    /* --- State & persistence --- */
-    const STORAGE_KEY = 'budgetGoalsV3';
-    let goals = [];
+    let goals = JSON.parse(localStorage.getItem("goals") || "[]");
 
-    function saveData(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(goals)); }
-    function loadData(){
-      try{
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if(raw) goals = JSON.parse(raw);
-      }catch(e){ goals = []; }
-      renderGoals();
+    function uid() {
+      return Date.now().toString(36) + Math.random().toString(36).substr(2,5);
     }
 
-    function uid(){ return Date.now() + Math.floor(Math.random()*1000); }
-
-    /* --- CRUD operations --- */
-    function addGoalFromForm(){
-      const name = (document.getElementById('goalName').value || '').trim();
-      const target = Number(document.getElementById('goalAmount').value);
-      const color = document.getElementById('goalColor').value || '#10b981';
-      if(!name || !target || target <= 0){ alert('Enter a valid name and amount'); return; }
-      goals.push({ id: uid(), name, target, saved: 0, color });
-      saveData(); renderGoals();
-      document.getElementById('goalName').value = ''; document.getElementById('goalAmount').value = '';
-    }
-    document.getElementById('addGoalBtn').addEventListener('click', addGoalFromForm);
-
-    function addSavings(id){
-      const amountStr = prompt('Add amount (EGP)');
-      const amount = Number(amountStr);
-      if(isNaN(amount) || amount <= 0) return;
-      const g = goals.find(x=>x.id===id);
-      if(!g) return;
-      g.saved = Number(g.saved || 0) + amount;
-      saveData(); renderGoals();
+    function saveData() {
+      localStorage.setItem("goals", JSON.stringify(goals));
     }
 
-    function editGoal(id){
-      const g = goals.find(x=>x.id===id);
-      if(!g) return;
-      const newName = prompt('Edit goal name:', g.name);
-      const newTargetStr = prompt('Edit target amount (EGP):', g.target);
-      const newColor = prompt('Edit color (hex, e.g. #10b981):', g.color);
-      if(newName) g.name = newName.trim();
-      const newTarget = Number(newTargetStr);
-      if(!isNaN(newTarget) && newTarget > 0) g.target = newTarget;
-      if(newColor && /^#([0-9a-f]{3,6})$/i.test(newColor)) g.color = newColor;
-      saveData(); renderGoals();
-    }
-
-    function deleteGoal(id){
-      if(!confirm('Delete this goal?')) return;
-      goals = goals.filter(x=>x.id!==id);
-      saveData(); renderGoals();
-    }
-
-    /* --- Render --- */
-    function formatEGP(n){ return Number.isInteger(n) ? n + ' EGP' : n.toFixed(2) + ' EGP'; }
-
-    function renderGoals(){
-      const container = document.getElementById('goalsContainer');
-      container.innerHTML = '';
-      if(goals.length===0){
-        container.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--muted)">No goals yet — add one above.</div>';
-        return;
-      }
-
-      goals.forEach(g=>{
-        const remaining = Math.max((g.target||0) - (g.saved||0), 0);
-        const percent = g.target>0 ? Math.min(100, Math.round((g.saved/g.target)*100)) : 0;
-
-        const card = document.createElement('div');
-        card.className = 'goal-card';
-        card.innerHTML = `
-          <button class="delete-icon" title="Delete goal" aria-label="Delete" onclick="deleteGoal(${g.id})">🗑</button>
-          <div class="goal-title">🎯 ${escapeHtml(g.name)}</div>
-          <div class="muted">Target: ${formatEGP(Number(g.target||0))}</div>
-          <div class="muted">Saved: ${formatEGP(Number(g.saved||0))}</div>
-          <div class="muted">Remaining: ${formatEGP(Number(remaining))}</div>
-
-          <div class="progress-row">
-            <div class="bar-wrap" aria-hidden>
-              <div class="bar" style="width:${percent}%;background:${g.color};"></div>
-            </div>
-            <div class="percent">${percent}%</div>
-          </div>
-
-          <div class="card-actions" style="margin-top:12px">
-            <button class="btn-add" onclick="addSavings(${g.id})">+ Add</button>
-            <button class="btn-edit" onclick="editGoal(${g.id})">✏️ Edit</button>
-          </div>
+    function renderGoals() {
+      const list = document.getElementById("goalList");
+      list.innerHTML = "";
+      goals.forEach(g => {
+        const div = document.createElement("div");
+        div.className = "goal";
+        div.innerHTML = `
+          <h3>${g.name}</h3>
+          <div>${g.saved} / ${g.target} EGP</div>
+          <div class="progress"><div class="progress-bar" style="width:${(g.saved/g.target*100).toFixed(1)}%; background:${g.color||"#4caf50"}"></div></div>
         `;
-        container.appendChild(card);
+        list.appendChild(div);
       });
     }
 
-    /* --- Safe HTML escape for names --- */
-    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+    function addGoal() {
+      const name = document.getElementById("goalName").value.trim();
+      const target = parseFloat(document.getElementById("goalTarget").value);
+      if (!name || isNaN(target)) return alert("Please enter goal and target");
+      goals.push({ id: uid(), name, target, saved: 0, color: "#10b981" });
+      saveData(); renderGoals();
+      document.getElementById("goalName").value="";
+      document.getElementById("goalTarget").value="";
+    }
 
-    /* --- Shortcut parsing: support comma format recommended:
-         - Add goal:  ?entry=goal,Name,Target,#hex
-         - Quick add (spend) (affects first goal): ?entry=spend,AMOUNT
-         Also supports simple space-separated "goal Name 5000" for single-word names.
-    */
-    (function handleShortcut(){
+    function spendFromFirst() {
+      const amt = parseFloat(document.getElementById("spendAmount").value);
+      if (goals.length===0 || isNaN(amt)) return;
+      goals[0].saved = Math.max(0, goals[0].saved - amt);
+      saveData(); renderGoals();
+      document.getElementById("spendAmount").value="";
+    }
+
+    // --- Unified Shortcut Handler ---
+    (function handleShortcut() {
       const params = new URLSearchParams(window.location.search);
-      const raw = params.get('entry');
-      if(!raw) return;
-      const r = raw.trim();
-      const lower = r.toLowerCase();
+      const entry = params.get("entry");
+      if (!entry) return;
 
-      if(lower.startsWith('goal')){
-        // comma form preferred: goal,Name,Target,#hex
-        if(r.includes(',')){
-          const parts = r.split(',').map(s=>s.trim()).filter(Boolean);
-          // drop the first token if it's 'goal'
-          if(parts[0].toLowerCase()==='goal') parts.shift();
-          const name = parts[0] || 'Untitled';
-          const target = Number(parts[1]) || 0;
-          const color = parts[2] || '#10b981';
-          if(name && target>0) { goals.push({id:uid(), name, target, saved:0, color}); saveData(); renderGoals(); alert('Goal added: ' + name); }
-        } else {
-          // fallback: "goal Name 5000" (Name single-word or multiple words with last token as amount)
-          const tokens = r.split(/\s+/).slice(1);
-          if(tokens.length>=2){
-            const amount = Number(tokens[tokens.length-1]) || 0;
-            const name = tokens.slice(0,-1).join(' ') || 'Untitled';
-            if(name && amount>0){ goals.push({id:uid(), name, target:amount, saved:0, color:'#10b981'}); saveData(); renderGoals(); alert('Goal added: ' + name); }
-          }
+      const tokens = entry.trim().split(/\s+/);
+      const first = tokens[0].toLowerCase();
+
+      if (first === "goal") {
+        const amount = parseFloat(tokens.pop());
+        const name = tokens.slice(1).join(" ");
+        if (name && !isNaN(amount)) {
+          goals.push({ id: uid(), name, target: amount, saved: 0, color: "#10b981" });
+          saveData(); renderGoals();
+          alert(`New goal added: ${name} (${amount} EGP)`);
         }
-      } else if(lower.startsWith('spend') || lower.startsWith('spending')){
-        // spend,amount (affects first goal's saved by subtracting)
-        if(r.includes(',')){
-          const parts = r.split(',').map(s=>s.trim());
-          const amount = Number(parts[1]) || 0;
-          if(goals.length>0 && amount>0){ goals[0].saved = Math.max(0, (goals[0].saved||0) - amount); saveData(); renderGoals(); alert('Spend applied: ' + amount + ' EGP'); }
-        } else {
-          const tokens = r.split(/\s+/).slice(1);
-          const amount = Number(tokens[0]) || 0;
-          if(goals.length>0 && amount>0){ goals[0].saved = Math.max(0, (goals[0].saved||0) - amount); saveData(); renderGoals(); alert('Spend applied: ' + amount + ' EGP'); }
+      } else if (first === "spend" || first === "spending") {
+        const amount = parseFloat(tokens[1]);
+        if (goals.length > 0 && !isNaN(amount)) {
+          goals[0].saved = Math.max(0, goals[0].saved - amount);
+          saveData(); renderGoals();
+          alert(`Spent ${amount} EGP from ${goals[0].name}`);
+        }
+      } else {
+        const amount = parseFloat(tokens.pop());
+        const name = tokens.join(" ");
+        if (!name || isNaN(amount)) return;
+        const g = goals.find(goal => goal.name.toLowerCase() === name.toLowerCase());
+        if (g) {
+          g.saved += amount;
+          saveData(); renderGoals();
+          alert(`Added ${amount} EGP to ${g.name}`);
         }
       }
     })();
 
-    // init
-    loadData();
-    // Handle Shortcut entry from URL
-function handleShortcutEntry() {
-  const params = new URLSearchParams(window.location.search);
-  const entry = params.get("entry");
-  if (!entry) return;
-
-  const parts = entry.trim().split(" ");
-  const amount = parseFloat(parts.pop()); // last word must be a number
-  const name = parts.join(" ");
-
-  if (!name || isNaN(amount)) return;
-
-  // find goal by name
-  let goal = goals.find(g => g.name.toLowerCase() === name.toLowerCase());
-
-  if (goal) {
-    // if exists → add to saved
-    goal.saved += amount;
-  } else {
-    // if new → create goal with target = amount
-    goals.push({
-      id: Date.now(),
-      name,
-      target: amount,
-      saved: 0,
-      color: "green"
-    });
-  }
-
-  saveData();
-  renderGoals();
-}
-handleShortcutEntry();
-
-
-    // Service worker register (relative path)
-    if('serviceWorker' in navigator){
-      navigator.serviceWorker.register('./sw.js').catch(()=>{/* ignore registration error */});
-    }
+    renderGoals();
   </script>
 </body>
 </html>
