@@ -4,205 +4,103 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Budget App</title>
-
-  <!-- iOS Home Screen -->
-  <link rel="apple-touch-icon" href="icon.png">
-  <meta name="apple-mobile-web-app-title" content="BudgetEGP">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-
   <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background: #f7f8fa;
-      color: #333;
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-      color: #2c3e50;
-    }
-    .card {
-      background: #fff;
-      border-radius: 15px;
-      padding: 20px;
-      margin: 15px auto;
-      max-width: 400px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    label {
-      font-size: 14px;
-      color: #555;
-      display: block;
-      margin-bottom: 6px;
-    }
-    input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 15px;
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1 { text-align: center; }
+    .goal-input { margin: 20px 0; text-align: center; }
+    .goal-input input, .goal-input select { margin: 5px; padding: 5px; }
+    .goals-container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+    .goal-card {
       border: 1px solid #ccc;
       border-radius: 10px;
-      font-size: 16px;
+      padding: 15px;
+      width: 250px;
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.1);
     }
-    button {
-      width: 100%;
-      padding: 12px;
-      background: #27ae60;
-      color: white;
-      font-size: 16px;
-      font-weight: bold;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    button:hover {
-      background: #219150;
-    }
-    .progress {
-      height: 25px;
-      background: #ddd;
-      border-radius: 15px;
-      overflow: hidden;
-      margin-top: 10px;
-    }
-    .bar {
-      height: 100%;
-      background: linear-gradient(90deg, #27ae60, #2ecc71);
-      width: 0%;
-      transition: width 0.3s ease;
-    }
-    .stats {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 10px;
-      font-size: 14px;
-      color: #444;
-    }
+    .progress { height: 20px; background: #eee; border-radius: 5px; overflow: hidden; margin-top: 10px; }
+    .bar { height: 100%; width: 0%; }
+    .goal-title { font-size: 18px; font-weight: bold; margin-bottom: 5px; }
   </style>
 </head>
 <body>
-  <h1>💰 Budget App</h1>
+  <h1>💰 Budget App (EGP)</h1>
 
-  <div class="card goal">
-    <label>Goal Name</label>
-    <input id="goalName" placeholder="e.g. Laptop">
-
-    <label>Goal Amount (EGP)</label>
-    <input id="goalAmount" type="number" placeholder="5000">
-
-    <button onclick="setGoal()">Set Goal</button>
+  <div class="goal-input">
+    <input id="goalName" placeholder="Goal name (e.g. Laptop)">
+    <input id="goalAmount" type="number" placeholder="Amount (EGP)">
+    <select id="goalColor">
+      <option value="green">Green</option>
+      <option value="blue">Blue</option>
+      <option value="red">Red</option>
+      <option value="orange">Orange</option>
+      <option value="purple">Purple</option>
+    </select>
+    <button onclick="addGoal()">Add Goal</button>
   </div>
 
-  <div class="card savings" style="display:none;">
-    <h2 id="goalTitle"></h2>
-    <div class="stats">
-      <div>Target: <span id="goalTarget"></span> EGP</div>
-      <div>Saved: <span id="savedAmount">0</span> EGP</div>
-    </div>
-    <div class="stats">
-      <div>Remaining: <span id="remaining">0</span> EGP</div>
-    </div>
-    <div class="progress"><div class="bar" id="progressBar"></div></div>
-    <br>
-    <input id="addAmount" type="number" placeholder="Add amount (EGP)">
-    <button onclick="addSavings()">Add Savings</button>
-  </div>
+  <div class="goals-container" id="goalsContainer"></div>
 
   <script>
-    let goal = { name: "", target: 0, saved: 0 };
+    let goals = [];
 
     function saveData() {
-      localStorage.setItem("budgetApp", JSON.stringify(goal));
+      localStorage.setItem("budgetAppGoals", JSON.stringify(goals));
     }
 
     function loadData() {
-      const data = localStorage.getItem("budgetApp");
+      const data = localStorage.getItem("budgetAppGoals");
       if (data) {
-        goal = JSON.parse(data);
-        if (goal.target > 0) showGoal();
+        goals = JSON.parse(data);
+        renderGoals();
       }
     }
 
-    function setGoal() {
-      goal.name = document.getElementById("goalName").value;
-      goal.target = parseFloat(document.getElementById("goalAmount").value);
-      goal.saved = 0;
-      saveData();
-      showGoal();
-    }
-
-    function showGoal() {
-      document.querySelector(".savings").style.display = "block";
-      document.getElementById("goalTitle").innerText = "🎯 " + goal.name;
-      document.getElementById("goalTarget").innerText = goal.target;
-      updateProgress();
-    }
-
-    function addSavings(amountFromShortcut) {
-      let amount;
-      if (typeof amountFromShortcut === "number") {
-        amount = amountFromShortcut;
-      } else {
-        amount = parseFloat(document.getElementById("addAmount").value);
+    function addGoal() {
+      const name = document.getElementById("goalName").value;
+      const target = parseFloat(document.getElementById("goalAmount").value);
+      const color = document.getElementById("goalColor").value;
+      if (name && !isNaN(target) && target > 0) {
+        goals.push({ name, target, saved: 0, color });
+        saveData();
+        renderGoals();
+        document.getElementById("goalName").value = "";
+        document.getElementById("goalAmount").value = "";
       }
+    }
+
+    function addSavings(index) {
+      const input = document.getElementById("addAmount-" + index);
+      const amount = parseFloat(input.value);
       if (!isNaN(amount) && amount > 0) {
-        goal.saved += amount;
+        goals[index].saved += amount;
         saveData();
-        updateProgress();
-        if (!amountFromShortcut) {
-          document.getElementById("addAmount").value = "";
-        }
+        renderGoals();
       }
     }
 
-    function updateProgress() {
-      document.getElementById("savedAmount").innerText = goal.saved;
-      const remaining = Math.max(goal.target - goal.saved, 0);
-      document.getElementById("remaining").innerText = remaining;
-      const percent = Math.min((goal.saved / goal.target) * 100, 100);
-      document.getElementById("progressBar").style.width = percent + "%";
-    }
+    function renderGoals() {
+      const container = document.getElementById("goalsContainer");
+      container.innerHTML = "";
+      goals.forEach((goal, index) => {
+        const remaining = Math.max(goal.target - goal.saved, 0);
+        const percent = Math.min((goal.saved / goal.target) * 100, 100);
 
-    // --- Handle Shortcut input ---
-    function handleShortcutInput() {
-      const params = new URLSearchParams(window.location.search);
-      const entry = params.get("entry");
-      if (!entry) return;
-
-      const input = entry.trim().toLowerCase();
-
-      if (input.startsWith("goal")) {
-        const parts = entry.split(" ");
-        const name = parts[1] || "Untitled";
-        const target = parseFloat(parts[2]) || 0;
-        goal = { name, target, saved: 0 };
-        saveData();
-        showGoal();
-        alert("New goal set via Shortcut: " + name);
-      } else if (input.startsWith("spend") || input.startsWith("spending")) {
-        const amount = parseFloat(entry.replace(/^(spend|spending)\s*/i, ""));
-        if (!isNaN(amount) && amount > 0) {
-          addSavings(amount);
-          alert("Added savings via Shortcut: " + amount + " EGP");
-        }
-      }
+        container.innerHTML += `
+          <div class="goal-card">
+            <div class="goal-title">🎯 ${goal.name}</div>
+            <p>Target: ${goal.target} EGP</p>
+            <p>Saved: ${goal.saved} EGP</p>
+            <p>Remaining: ${remaining} EGP</p>
+            <div class="progress"><div class="bar" style="width:${percent}%; background:${goal.color};"></div></div>
+            <br>
+            <input id="addAmount-${index}" type="number" placeholder="Add amount (EGP)">
+            <button onclick="addSavings(${index})">Add</button>
+          </div>
+        `;
+      });
     }
 
     loadData();
-    handleShortcutInput();
-  </script>
-
-  <!-- Service Worker -->
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker
-        .register("/sw.js")
-        .then(() => console.log("✅ Service Worker registered"))
-        .catch(err => console.error("⚠️ SW failed:", err));
-    }
   </script>
 </body>
 </html>
