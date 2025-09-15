@@ -232,28 +232,36 @@
 function handleShortcutEntry() {
   const params = new URLSearchParams(window.location.search);
   const entry = params.get("entry");
-  if (entry) {
-    const parts = entry.split(" ");
-    if (parts.length >= 2) {
-      const amount = parseFloat(parts.pop()); // last word = number
-      const name = parts.join(" ");
-      if (!isNaN(amount)) {
-        // check if goal exists
-        let goal = goals.find(g => g.name.toLowerCase() === name.toLowerCase());
-        if (!goal) {
-          // create new goal if not exist
-          goals.push({ id: Date.now(), name, target: amount, saved: 0, color: "green" });
-        } else {
-          // add savings if goal exists
-          goal.saved += amount;
-        }
-        saveData();
-        renderGoals();
-      }
-    }
+  if (!entry) return;
+
+  const parts = entry.trim().split(" ");
+  const amount = parseFloat(parts.pop()); // last word must be a number
+  const name = parts.join(" ");
+
+  if (!name || isNaN(amount)) return;
+
+  // find goal by name
+  let goal = goals.find(g => g.name.toLowerCase() === name.toLowerCase());
+
+  if (goal) {
+    // if exists → add to saved
+    goal.saved += amount;
+  } else {
+    // if new → create goal with target = amount
+    goals.push({
+      id: Date.now(),
+      name,
+      target: amount,
+      saved: 0,
+      color: "green"
+    });
   }
+
+  saveData();
+  renderGoals();
 }
 handleShortcutEntry();
+
 
     // Service worker register (relative path)
     if('serviceWorker' in navigator){
