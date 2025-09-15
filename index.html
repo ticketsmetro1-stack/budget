@@ -4,7 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Budget App (EGP)</title>
-
   <!-- iOS Home screen meta -->
   <link rel="apple-touch-icon" href="icon.png">
   <meta name="apple-mobile-web-app-title" content="BudgetEGP">
@@ -229,6 +228,32 @@
 
     // init
     loadData();
+    // Handle Shortcut entry from URL
+function handleShortcutEntry() {
+  const params = new URLSearchParams(window.location.search);
+  const entry = params.get("entry");
+  if (entry) {
+    const parts = entry.split(" ");
+    if (parts.length >= 2) {
+      const amount = parseFloat(parts.pop()); // last word = number
+      const name = parts.join(" ");
+      if (!isNaN(amount)) {
+        // check if goal exists
+        let goal = goals.find(g => g.name.toLowerCase() === name.toLowerCase());
+        if (!goal) {
+          // create new goal if not exist
+          goals.push({ id: Date.now(), name, target: amount, saved: 0, color: "green" });
+        } else {
+          // add savings if goal exists
+          goal.saved += amount;
+        }
+        saveData();
+        renderGoals();
+      }
+    }
+  }
+}
+handleShortcutEntry();
 
     // Service worker register (relative path)
     if('serviceWorker' in navigator){
