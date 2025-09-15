@@ -1,471 +1,137 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- iOS Home Screen Icon -->
-<link rel="apple-touch-icon" href="icon.png">
+  <meta charset="UTF-8">
+  <title>Budget App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- App name (when saved to Home Screen) -->
-<meta name="apple-mobile-web-app-title" content="My Budget">
+  <!-- iOS Home Screen -->
+  <link rel="apple-touch-icon" href="icon.png">
+  <meta name="apple-mobile-web-app-title" content="Budget">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
-<!-- Make it open full-screen -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-<title>BudgetEGP — Goals & Spending</title>
-<style>
-  :root{
-    --bg:#f6f7fb; --card:#fff; --muted:#6b7280; --accent:#2563eb;
-  }
-  *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;}
-  body{margin:0;background:var(--bg);color:#0f172a;padding:16px;}
-  header{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px;}
-  h1{font-size:20px;margin:0;}
-  .small{font-size:13px;color:var(--muted);}
-  .card{background:var(--card);padding:14px;border-radius:12px;box-shadow:0 1px 2px rgba(16,24,40,0.04);margin-bottom:12px;}
-  button{background:var(--accent);color:#fff;border:0;padding:8px 12px;border-radius:8px;font-weight:600;}
-  .muted-btn{background:transparent;border:1px solid #e6e9ef;color:var(--muted);padding:6px 10px;border-radius:8px;}
-  .row{display:flex;gap:8px;align-items:center;}
-  .col{display:flex;flex-direction:column;gap:8px;}
-  input[type="number"], input[type="text"], select{padding:8px;border-radius:8px;border:1px solid #e6e9ef;font-size:15px;}
-  .goal-list{display:flex;flex-direction:column;gap:10px;margin-top:10px;}
-  .goal-item{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:10px;background:linear-gradient(180deg,#fff,#fbfdff);border:1px solid #eef2ff;}
-  .goal-left{max-width:65%;}
-  .progress{height:10px;background:#eef2ff;border-radius:10px;overflow:hidden;margin-top:8px;}
-  .progress > i{display:block;height:100%;background:linear-gradient(90deg,#60a5fa,#2563eb);}
-  .muted{color:var(--muted);font-size:13px;}
-  .actions{display:flex;gap:6px;}
-  .log-list{max-height:260px;overflow:auto;margin-top:8px;}
-  .log-item{display:flex;justify-content:space-between;padding:8px;border-radius:8px;border:1px solid #f1f5f9;background:#fff;margin-bottom:6px;}
-  footer{margin-top:18px;font-size:13px;color:var(--muted);text-align:center;}
-  .pill{font-size:13px;padding:6px 8px;border-radius:999px;background:#f1f5f9;}
-  .flex-between{display:flex;justify-content:space-between;align-items:center;}
-  .btn-ghost{background:transparent;border:1px solid #e2e8f0;color:#0f172a;padding:6px 8px;border-radius:8px;}
-  .tools{display:flex;gap:8px;flex-wrap:wrap;}
-  /* responsive */
-  @media (max-width:420px){ header h1{font-size:18px;} }
-</style>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1, h2 { text-align: center; }
+    .section { margin: 20px 0; }
+    ul { list-style: none; padding: 0; }
+    li { background: #f0f0f0; margin: 5px 0; padding: 8px; border-radius: 6px; }
+    button { padding: 6px 12px; margin: 5px; }
+    input { padding: 6px; margin: 5px; }
+  </style>
 </head>
 <body>
-<header>
-  <div>
-    <h1>BudgetEGP</h1>
-    <div class="small">Goals • Savings • Spending (EGP)</div>
-  </div>
-  <div class="row">
-    <button id="btn-new-goal">+ New Goal</button>
-    <button id="btn-export" class="muted-btn">Export</button>
-  </div>
-</header>
+  <h1>💰 Budget Tracker</h1>
 
-<section class="card" id="goals-section">
-  <div class="flex-between">
-    <div><strong>Your Goals</strong><div class="small">Tap a goal to add or save money</div></div>
-    <div class="pill" id="total-saved">Saved: 0 EGP</div>
+  <!-- Goals Section -->
+  <div class="section">
+    <h2>🎯 Goals</h2>
+    <input id="goal-name" placeholder="Goal name">
+    <input id="goal-target" type="number" placeholder="Target (EGP)">
+    <button onclick="addGoal()">Add Goal</button>
+    <ul id="goal-list"></ul>
   </div>
 
-  <div class="goal-list" id="goal-list"></div>
-  <div style="margin-top:10px" class="muted">Tip: Add money to a goal — the remaining amount updates automatically.</div>
-</section>
-
-<section class="card">
-  <div class="flex-between">
-    <div><strong>Quick Actions</strong><div class="small">Fast add or log</div></div>
-    <div class="tools">
-      <button id="btn-quick-add" class="btn-ghost">+ Add to Goal</button>
-      <button id="btn-log-spend" class="btn-ghost">Log Spending</button>
-      <button id="btn-reset" class="muted-btn">Reset Data</button>
-    </div>
+  <!-- Spending Section -->
+  <div class="section">
+    <h2>💸 Spending</h2>
+    <input id="spend-title" placeholder="Item">
+    <input id="spend-amount" type="number" placeholder="Amount">
+    <button onclick="addSpending()">Add Spending</button>
+    <ul id="log-list"></ul>
   </div>
-</section>
 
-<section class="card">
-  <div class="flex-between">
-    <div><strong>Spending Log</strong><div class="small">Recent transactions</div></div>
-    <div class="small" id="today-total">Today: 0 EGP</div>
-  </div>
-  <div class="log-list" id="log-list"></div>
-  <div style="margin-top:8px" class="small">Categories: food, transport, bills, other — you can add custom names.</div>
-</section>
-
-<section class="card">
-  <div><strong>Data</strong></div>
-  <div style="margin-top:8px" class="row">
-    <button id="btn-import" class="muted-btn">Import</button>
-    <button id="btn-clear-logs" class="muted-btn">Clear Logs</button>
-  </div>
-</section>
-
-<footer class="small">
-  Works offline. To trigger from your iPhone Back Tap: add to Home Screen, then create a Shortcut that opens this app (see instructions below).
-</footer>
-
-<!-- Simple modals -->
-<div id="modal" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:20px;">
-  <div style="width:100%;max-width:520px;">
-    <div class="card" id="modal-card"></div>
-  </div>
-</div>
-
-<script>
-/* Simple budget app using localStorage */
-const LS_KEY = 'budgetEGP_v1';
-let state = loadState();
-
-function loadState(){
-  try{
-    const s = JSON.parse(localStorage.getItem(LS_KEY));
-    if(!s) return {goals:[], logs:[]};
-    if(!s.goals) s.goals=[];
-    if(!s.logs) s.logs=[];
-    return s;
-  }catch(e){ return {goals:[], logs:[]}; }
-}
-function saveState(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); render(); }
-
-/* Helpers */
-function formatEGP(n){ // ensure numeric rounding show integers or two decimals
-  if (Number.isInteger(n)) return n + ' EGP';
-  return n.toFixed(2) + ' EGP';
-}
-function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
-function nowISO(){ return new Date().toISOString(); }
-function dateOnly(iso){ return iso.slice(0,10); }
-
-/* UI rendering */
-const el = id => document.getElementById(id);
-function render(){
-  renderGoals();
-  renderLogs();
-  renderTotals();
-}
-
-function renderGoals(){
-  const list = el('goal-list');
-  list.innerHTML = '';
-  let totalSaved = 0;
-  state.goals.forEach(g=>{
-    totalSaved += Number(g.saved||0);
-    const remaining = Math.max(0, Number(g.target)-Number(g.saved));
-    const pct = g.target>0 ? Math.min(100, Math.round((Number(g.saved)/Number(g.target))*100)) : 0;
-    const item = document.createElement('div');
-    item.className='goal-item';
-    item.innerHTML = `
-      <div class="goal-left">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div><strong>${escapeHtml(g.name)}</strong><div class="muted">${formatEGP(Number(g.saved))} saved • Target ${formatEGP(Number(g.target))}</div></div>
-          <div style="text-align:right">
-            <div class="muted">${pct}%</div>
-            <div class="muted" style="font-size:13px">${remaining>0?('Remaining '+formatEGP(remaining)):'Completed'}</div>
-          </div>
-        </div>
-        <div class="progress" aria-hidden><i style="width:${pct}%"></i></div>
-      </div>
-      <div class="actions">
-        <button class="muted-btn" data-act="add" data-id="${g.id}">+ Add</button>
-        <button class="muted-btn" data-act="edit" data-id="${g.id}">Edit</button>
-        <button class="muted-btn" data-act="delete" data-id="${g.id}">Delete</button>
-      </div>
-    `;
-    list.appendChild(item);
-  });
-  el('total-saved').textContent = 'Saved: ' + formatEGP(totalSaved);
-  // attach listeners
-  list.querySelectorAll('button').forEach(b=>{
-    b.addEventListener('click', e=>{
-      const id = b.dataset.id;
-      const act = b.dataset.act;
-      if(act==='add') openAddToGoal(id);
-      if(act==='edit') openEditGoal(id);
-      if(act==='delete') { if(confirm('Delete this goal?')){ state.goals = state.goals.filter(x=>x.id!==id); saveState(); } }
-    });
-  });
-}
-
-function renderLogs(){
-  const logs = state.logs.slice().sort((a,b)=>b.t.localeCompare(a.t));
-  const container = el('log-list');
-  container.innerHTML = '';
-  if(logs.length===0){ container.innerHTML = '<div class="muted">No transactions yet.</div>'; return; }
-  logs.forEach(l=>{
-    const row = document.createElement('div'); row.className='log-item';
-    row.innerHTML = `<div><strong>${escapeHtml(l.title||l.cat||'Spend')}</strong><div class="muted">${escapeHtml(l.cat||'')}${l.note?(' • '+escapeHtml(l.note)):''}</div></div>
-      <div style="text-align:right"><div>${formatEGP(Number(l.amount))}</div><div class="muted" style="font-size:12px">${dateOnly(l.t)}</div></div>`;
-    container.appendChild(row);
-  });
-}
-
-function renderTotals(){
-  const today = dateOnly(nowISO());
-  const todayTotal = state.logs.filter(l=>dateOnly(l.t)===today).reduce((s,l)=>s+Number(l.amount),0);
-  el('today-total').textContent = 'Today: ' + formatEGP(todayTotal);
-}
-
-/* UI modals */
-function showModal(html){
-  const modal = el('modal');
-  el('modal-card').innerHTML = html;
-  modal.style.display='flex';
-  // close on background tap
-  modal.onclick = function(e){
-    if(e.target===modal) closeModal();
-  };
-}
-function closeModal(){ el('modal').style.display='none'; el('modal-card').innerHTML=''; }
-
-/* New goal */
-el('btn-new-goal').addEventListener('click', ()=>{
-  showModal(`
-    <div>
-      <h3>Create Goal</h3>
-      <div style="margin-top:8px">
-        <label class="small">Name</label><input id="g-name" placeholder="e.g., New Laptop" />
-      </div>
-      <div style="margin-top:8px">
-        <label class="small">Target (EGP)</label><input id="g-target" type="number" min="0" placeholder="10000" />
-      </div>
-      <div style="margin-top:8px" class="row">
-        <button id="g-save">Save</button>
-        <button id="g-cancel" class="muted-btn">Cancel</button>
-      </div>
-    </div>
-  `);
-  el('g-cancel').addEventListener('click', closeModal);
-  el('g-save').addEventListener('click', ()=>{
-    const name = document.getElementById('g-name').value.trim() || 'Untitled';
-    const target = Number(document.getElementById('g-target').value) || 0;
-    const newGoal = {id:uid(), name, target, saved:0, created:nowISO()};
-    state.goals.push(newGoal); saveState(); closeModal();
-  });
-});
-
-/* Edit goal */
-function openEditGoal(id){
-  const g = state.goals.find(x=>x.id===id);
-  if(!g) return alert('Goal not found');
-  showModal(`
-    <div>
-      <h3>Edit Goal</h3>
-      <div style="margin-top:8px">
-        <label class="small">Name</label><input id="eg-name" value="${escapeHtmlAttr(g.name)}" />
-      </div>
-      <div style="margin-top:8px">
-        <label class="small">Target (EGP)</label><input id="eg-target" type="number" min="0" value="${Number(g.target)}" />
-      </div>
-      <div style="margin-top:8px">
-        <label class="small">Saved (EGP)</label><input id="eg-saved" type="number" min="0" value="${Number(g.saved)}" />
-      </div>
-      <div style="margin-top:8px" class="row">
-        <button id="eg-save">Save</button>
-        <button id="eg-cancel" class="muted-btn">Cancel</button>
-      </div>
-    </div>
-  `);
-  el('eg-cancel').addEventListener('click', closeModal);
-  el('eg-save').addEventListener('click', ()=>{
-    g.name = document.getElementById('eg-name').value.trim() || g.name;
-    g.target = Number(document.getElementById('eg-target').value) || 0;
-    g.saved = Number(document.getElementById('eg-saved').value) || 0;
-    saveState(); closeModal();
-  });
-}
-
-/* Add to goal (fast) */
-function openAddToGoal(goalId){
-  const goal = state.goals.find(x=>x.id===goalId);
-  if(!goal) return alert('Goal not found');
-  showModal(`
-    <div>
-      <h3>Add Money to "${escapeHtml(goal.name)}"</h3>
-      <div style="margin-top:8px">
-        <label class="small">Amount (EGP)</label><input id="add-amount" type="number" min="0" placeholder="500" />
-      </div>
-      <div style="margin-top:8px">
-        <label class="small">Note (optional)</label><input id="add-note" placeholder="source or note" />
-      </div>
-      <div style="margin-top:8px" class="row">
-        <button id="add-save">Add</button>
-        <button id="add-cancel" class="muted-btn">Cancel</button>
-      </div>
-    </div>
-  `);
-  el('add-cancel').addEventListener('click', closeModal);
-  el('add-save').addEventListener('click', ()=>{
-    const amount = Number(document.getElementById('add-amount').value) || 0;
-    const note = document.getElementById('add-note').value.trim();
-    if(amount<=0) return alert('Enter an amount > 0');
-    // increase saved
-    goal.saved = Number(goal.saved) + amount;
-    // optionally create a log entry
-    state.logs.push({id:uid(), title: 'Saved to: ' + goal.name, amount: amount, cat: 'save', note: note, t: nowISO(), goalId: goal.id});
-    saveState(); closeModal();
-  });
-}
-
-/* Quick Add button — choose goal */
-el('btn-quick-add').addEventListener('click', ()=>{
-  if(state.goals.length===0) return alert('Create a goal first.');
-  // list goals
-  showModal(`
-    <div>
-      <h3>Add to Goal</h3>
-      <div id="quick-goals"></div>
-      <div style="margin-top:8px" class="row">
-        <button id="qa-cancel" class="muted-btn">Cancel</button>
-      </div>
-    </div>
-  `);
-  const div = document.getElementById('quick-goals');
-  state.goals.forEach(g=>{
-    const d = document.createElement('div');
-    d.style.padding='8px';
-    d.style.display='flex';
-    d.style.justifyContent='space-between';
-    d.style.alignItems='center';
-    d.innerHTML=`<div><strong>${escapeHtml(g.name)}</strong><div class="muted">${formatEGP(Number(g.saved))} / ${formatEGP(Number(g.target))}</div></div>
-                 <div><button class="muted-btn" data-id="${g.id}">Add</button></div>`;
-    div.appendChild(d);
-  });
-  document.querySelectorAll('#quick-goals button').forEach(b=>{
-    b.addEventListener('click', ()=>{ openAddToGoal(b.dataset.id); });
-  });
-  el('qa-cancel').addEventListener('click', closeModal);
-});
-
-/* Log spending */
-el('btn-log-spend').addEventListener('click', ()=> openLogSpend());
-
-function openLogSpend(prefill){
-  showModal(`
-    <div>
-      <h3>Log Spending</h3>
-      <div style="margin-top:8px">
-        <label class="small">Amount (EGP)</label><input id="sp-amount" type="number" min="0" />
-      </div>
-      <div style="margin-top:8px">
-        <label class="small">Category</label><input id="sp-cat" placeholder="food, transport, bills..." />
-      </div>
-      <div style="margin-top:8px">
-        <label class="small">Note</label><input id="sp-note" placeholder="optional" />
-      </div>
-      <div style="margin-top:8px" class="row">
-        <button id="sp-save">Save</button>
-        <button id="sp-cancel" class="muted-btn">Cancel</button>
-      </div>
-    </div>
-  `);
-  if(prefill){
-    document.getElementById('sp-cat').value = prefill.cat || '';
-    document.getElementById('sp-note').value = prefill.note || '';
-  }
-  el('sp-cancel').addEventListener('click', closeModal);
-  el('sp-save').addEventListener('click', ()=>{
-    const amount = Number(document.getElementById('sp-amount').value) || 0;
-    const cat = document.getElementById('sp-cat').value.trim() || 'other';
-    const note = document.getElementById('sp-note').value.trim();
-    if(amount<=0) return alert('Enter amount > 0');
-    state.logs.push({id:uid(), title: cat, amount: -Math.abs(amount), cat, note, t: nowISO()});
-    saveState(); closeModal();
-  });
-}
-
-/* Reset / clear */
-el('btn-reset').addEventListener('click', ()=>{
-  if(confirm('Reset ALL data (goals and logs)? This cannot be undone.')){ state = {goals:[], logs:[]}; saveState(); }
-});
-el('btn-clear-logs').addEventListener('click', ()=>{
-  if(confirm('Clear spending logs?')){ state.logs = []; saveState(); }
-});
-
-/* Export/import */
-el('btn-export').addEventListener('click', ()=>{
-  const dataStr = JSON.stringify(state, null, 2);
-  // download
-  const blob = new Blob([dataStr], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'budgetEGP_backup.json';
-  document.body.appendChild(a); a.click(); a.remove();
-  URL.revokeObjectURL(url);
-});
-el('btn-import').addEventListener('click', ()=>{
-  showModal(`
-    <div>
-      <h3>Import Data</h3>
-      <div class="small">Paste a previously exported JSON here (it will replace current data).</div>
-      <div style="margin-top:8px"><textarea id="import-data" style="width:100%;height:160px;padding:8px;border-radius:8px;border:1px solid #e6e9ef"></textarea></div>
-      <div style="margin-top:8px" class="row">
-        <button id="imp-ok">Import</button>
-        <button id="imp-cancel" class="muted-btn">Cancel</button>
-      </div>
-    </div>
-  `);
-  el('imp-cancel').addEventListener('click', closeModal);
-  el('imp-ok').addEventListener('click', ()=>{
-    try{
-      const parsed = JSON.parse(document.getElementById('import-data').value);
-      if(!confirm('Replace current data with imported data?')) return;
-      state = parsed;
-      saveState(); closeModal();
-    }catch(e){ alert('Invalid JSON'); }
-  });
-});
-
-/* Utilities */
-function escapeHtml(s){ return String(s).replace(/[&<>"']/g, function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];}); }
-function escapeHtmlAttr(s){ return (s+'').replace(/"/g,'&quot;'); }
-
-/* init */
-render();
-
-</script>
-</body>
   <script>
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker
-      .register("/sw.js")
-      .then(() => console.log("✅ Service Worker registered"))
-      .catch((err) => console.error("⚠️ Service Worker failed:", err));
-  }
-</script>
- <script>
-  // Get text passed from Shortcut
-  const params = new URLSearchParams(window.location.search);
-  const entry = params.get("entry");
+    // --- State Management ---
+    let state = JSON.parse(localStorage.getItem("budgetState") || '{"goals":[],"logs":[]}');
 
-  if (entry) {
-    // Normalize input
-    const input = entry.trim().toLowerCase();
-
-    // Example logic
-    if (input.startsWith("goal")) {
-      addGoal(entry.replace(/^goal\s*/i, ""));
-    } else if (input.startsWith("spend") || input.startsWith("spending")) {
-      addSpending(entry.replace(/^(spend|spending)\s*/i, ""));
-    } else {
-      alert("Unrecognized input: " + entry);
+    function saveState() {
+      localStorage.setItem("budgetState", JSON.stringify(state));
+      render();
     }
-  }
 
-  // Example functions — you should replace with your own logic
-  function addGoal(text) {
-    const list = document.getElementById("goals");
-    if (list) {
-      const li = document.createElement("li");
-      li.textContent = text;
-      list.appendChild(li);
-    }
-  }
+    function uid() { return Date.now() + "-" + Math.floor(Math.random()*1000); }
+    function nowISO() { return new Date().toISOString(); }
 
-  function addSpending(text) {
-    const list = document.getElementById("spending");
-    if (list) {
-      const li = document.createElement("li");
-      li.textContent = text;
-      list.appendChild(li);
+    // --- Add Goal ---
+    function addGoal(name, target) {
+      if (!name) name = document.getElementById("goal-name").value.trim();
+      if (!target) target = Number(document.getElementById("goal-target").value);
+      if (!name || !target) return alert("⚠️ Fill in goal name and target");
+      state.goals.push({id:uid(), name, target, saved:0, created:nowISO()});
+      saveState();
+      document.getElementById("goal-name").value = "";
+      document.getElementById("goal-target").value = "";
     }
-  }
-</script>
+
+    // --- Add Spending ---
+    function addSpending(title, amount) {
+      if (!title) title = document.getElementById("spend-title").value.trim();
+      if (!amount) amount = Number(document.getElementById("spend-amount").value);
+      if (!title || !amount) return alert("⚠️ Fill in item and amount");
+      state.logs.push({id:uid(), title, amount:-Math.abs(amount), cat:title, note:"", t:nowISO()});
+      saveState();
+      document.getElementById("spend-title").value = "";
+      document.getElementById("spend-amount").value = "";
+    }
+
+    // --- Render UI ---
+    function render() {
+      const goalList = document.getElementById("goal-list");
+      goalList.innerHTML = "";
+      state.goals.forEach(g => {
+        const li = document.createElement("li");
+        li.textContent = `${g.name} — Target: ${g.target} EGP`;
+        goalList.appendChild(li);
+      });
+
+      const logList = document.getElementById("log-list");
+      logList.innerHTML = "";
+      state.logs.forEach(l => {
+        const li = document.createElement("li");
+        li.textContent = `${l.title}: ${-l.amount} EGP`;
+        logList.appendChild(li);
+      });
+    }
+    render();
+
+    // --- Shortcut Input Parser ---
+    const params = new URLSearchParams(window.location.search);
+    const entry = params.get("entry");
+    if (entry) {
+      const input = entry.trim();
+      const lower = input.toLowerCase();
+
+      if (lower.startsWith("goal")) {
+        const content = input.replace(/^goal\s*/i, "").trim();
+        if (content) {
+          const parts = content.split(" ");
+          const target = Number(parts.pop()) || 0;
+          const name = parts.join(" ") || "Untitled Goal";
+          addGoal(name, target);
+          alert(`✅ Goal added: ${name} (${target} EGP)`);
+        }
+      } else if (lower.startsWith("spend") || lower.startsWith("spending")) {
+        const content = input.replace(/^(spend|spending)\s*/i, "").trim();
+        if (content) {
+          const parts = content.split(" ");
+          const amount = Number(parts.pop()) || 0;
+          const cat = parts.join(" ") || "Other";
+          addSpending(cat, amount);
+          alert(`💸 Spending logged: ${amount} EGP on ${cat}`);
+        }
+      } else {
+        alert("⚠️ Could not understand: " + entry);
+      }
+    }
+
+    // --- Register Service Worker ---
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/budget/sw.js")
+        .then(() => console.log("✅ Service Worker registered"))
+        .catch(err => console.error("⚠️ Service Worker failed:", err));
+    }
+  </script>
+</body>
 </html>
