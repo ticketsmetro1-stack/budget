@@ -4,71 +4,42 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Budget App (EGP)</title>
-
-  <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icon-192.png">
-
   <style>
     :root{ --bg:#f6f7fb; --card:#fff; --muted:#6b7280; --accent:#2563eb; }
     *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;}
     body{margin:0;background:var(--bg);color:#0f172a;padding:18px;}
     h1{margin:0 0 12px;text-align:center;font-size:20px;}
-
-    /* form card */
-    .form-card{
-      max-width:720px;margin:0 auto 16px;background:var(--card);padding:12px;border-radius:12px;
-      box-shadow:0 4px 20px rgba(16,24,40,0.04);
-    }
+    .form-card{max-width:720px;margin:0 auto 18px;background:var(--card);padding:14px;border-radius:12px;box-shadow:0 4px 20px rgba(16,24,40,0.04);}
     .row{display:flex;gap:10px;align-items:center;}
     .col{display:flex;flex-direction:column;gap:8px;}
-    input[type="text"], input[type="number"], select, input[type="color"]{
-      padding:10px;border-radius:10px;border:1px solid #e6e9ef;font-size:15px;width:100%;
-    }
+    input, select{padding:10px;border-radius:10px;border:1px solid #e6e9ef;font-size:15px;width:100%;}
     button.primary{background:var(--accent);color:#fff;border:0;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer;}
     .small{font-size:13px;color:var(--muted);}
-
-    /* grid */
-    .goals-container{
-      max-width:980px;margin:0 auto;display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;
-    }
-
-    .goal-card{
-      background:var(--card);padding:14px;border-radius:12px;box-shadow:0 4px 14px rgba(16,24,40,0.04);position:relative;
-    }
+    .goals-container{max-width:980px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;}
+    .goal-card{background:var(--card);padding:14px;border-radius:12px;box-shadow:0 4px 14px rgba(16,24,40,0.04);position:relative;}
     .goal-title{font-weight:700;font-size:18px;margin:0 0 6px;}
     .muted{color:var(--muted);font-size:14px;margin:2px 0;}
     .progress-row{display:flex;align-items:center;gap:10px;margin-top:8px;}
     .bar-wrap{flex:1;background:#eef2ff;border-radius:999px;padding:6px;}
     .bar{height:12px;border-radius:999px;width:0%;transition:width .25s ease;}
     .percent{min-width:40px;text-align:right;font-weight:600;font-size:13px;color:#0f172a;}
-
     .card-actions{display:flex;gap:8px;margin-top:12px;}
     .card-actions button{flex:1;padding:10px;border-radius:10px;border:1px solid #e6e9ef;background:#fff;cursor:pointer;font-weight:700;}
     .btn-add{background:#10b981;color:#fff;border:0;}
     .btn-edit{background:#f59e0b;color:#fff;border:0;}
-    .delete-icon{position:absolute;right:10px;top:10px;border-radius:8px;border:0;background:transparent;cursor:pointer;font-size:16px;color:#b91c1c;}
-
-    /* responsive: force a 2-column grid on small screens (mobile) */
-    @media (max-width:600px){
-      .goals-container{grid-template-columns:repeat(2,1fr);}
-    }
-
-    /* small helpers */
-    .center { text-align:center; color:var(--muted); padding:18px 0; grid-column:1/-1; }
+    .delete-icon{position:absolute;right:10px;top:10px;border:0;background:transparent;cursor:pointer;font-size:16px;color:#b91c1c;}
+    @media (max-width:600px){.goals-container{grid-template-columns:repeat(2,1fr);}}
   </style>
 </head>
 <body>
   <h1>💰 Budget App (EGP)</h1>
 
-  <div class="form-card" aria-label="Add goal">
+  <div class="form-card">
     <div class="col">
       <label class="small">Goal name</label>
       <input id="goalName" type="text" placeholder="e.g., Laptop">
-
       <label class="small">Goal amount (EGP)</label>
       <input id="goalAmount" type="number" placeholder="5000">
-
       <label class="small">Color</label>
       <div class="row">
         <input id="goalColor" type="color" value="#10b981" style="width:64px;padding:8px;">
@@ -78,180 +49,103 @@
     </div>
   </div>
 
-  <div class="goals-container" id="goalsContainer" aria-live="polite"></div>
+  <div class="goals-container" id="goalsContainer"></div>
 
   <script>
-    /* ---------- Storage & helpers ---------- */
-    const STORAGE_KEY = 'budgetGoalsV3';
+    const STORAGE_KEY = 'budgetGoals';
     let goals = [];
-    function saveData(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(goals)); }
-    function loadData(){ try{ const raw = localStorage.getItem(STORAGE_KEY); if(raw) goals = JSON.parse(raw); }catch(e){ goals = []; } renderGoals(); }
-    function uid(){ return Date.now() + Math.floor(Math.random()*1000); }
-    function formatEGP(n){ return Number.isInteger(n) ? n + ' EGP' : Number(n).toFixed(2) + ' EGP'; }
-    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
-    /* ---------- CRUD ---------- */
+    function saveData(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(goals)); }
+    function loadData(){
+      try{ goals = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+      catch(e){ goals = []; }
+      renderGoals();
+    }
+    function uid(){ return Date.now() + Math.floor(Math.random()*1000); }
+
     function addGoalFromForm(){
-      const name = (document.getElementById('goalName').value || '').trim();
+      const name = document.getElementById('goalName').value.trim();
       const target = Number(document.getElementById('goalAmount').value);
-      const color = document.getElementById('goalColor').value || '#10b981';
-      if(!name || !target || target <= 0){ alert('Enter a valid name and amount'); return; }
-      goals.push({ id: uid(), name, target, saved: 0, color });
+      const color = document.getElementById('goalColor').value;
+      if(!name || target<=0) return alert("Enter valid name & amount");
+      goals.push({ id:uid(), name, target, saved:0, color });
       saveData(); renderGoals();
-      document.getElementById('goalName').value = ''; document.getElementById('goalAmount').value = '';
+      document.getElementById('goalName').value='';
+      document.getElementById('goalAmount').value='';
     }
     document.getElementById('addGoalBtn').addEventListener('click', addGoalFromForm);
 
     function addSavings(id){
-      const amountStr = prompt('Add amount (EGP)');
-      const amount = Number(amountStr);
-      if(isNaN(amount) || amount <= 0) return;
-      const g = goals.find(x=>x.id===id);
-      if(!g) return;
-      g.saved = Number(g.saved || 0) + amount;
-      saveData(); renderGoals();
+      const g = goals.find(x=>x.id===id); if(!g) return;
+      const amt = Number(prompt("Add amount (EGP)"));
+      if(isNaN(amt)||amt<=0) return;
+      g.saved += amt; saveData(); renderGoals();
     }
-
     function editGoal(id){
-      const g = goals.find(x=>x.id===id);
-      if(!g) return;
-      const newName = prompt('Edit goal name:', g.name);
-      const newTargetStr = prompt('Edit target amount (EGP):', g.target);
-      const newColor = prompt('Edit color (hex, e.g. #10b981):', g.color);
-      if(newName) g.name = newName.trim();
-      const newTarget = Number(newTargetStr);
-      if(!isNaN(newTarget) && newTarget > 0) g.target = newTarget;
-      if(newColor && /^#([0-9a-f]{3,6})$/i.test(newColor)) g.color = newColor;
+      const g = goals.find(x=>x.id===id); if(!g) return;
+      const newName = prompt("Edit name", g.name);
+      const newTarget = Number(prompt("Edit target", g.target));
+      if(newName) g.name=newName.trim();
+      if(newTarget>0) g.target=newTarget;
       saveData(); renderGoals();
     }
-
     function deleteGoal(id){
-      if(!confirm('Delete this goal?')) return;
-      goals = goals.filter(x=>x.id!==id);
-      saveData(); renderGoals();
+      if(!confirm("Delete this goal?")) return;
+      goals=goals.filter(x=>x.id!==id); saveData(); renderGoals();
     }
 
-    /* ---------- Render ---------- */
     function renderGoals(){
-      const container = document.getElementById('goalsContainer');
-      container.innerHTML = '';
-      if(goals.length===0){
-        container.innerHTML = '<div class="center">No goals yet — add one above.</div>';
-        return;
-      }
+      const container=document.getElementById('goalsContainer');
+      container.innerHTML='';
+      if(goals.length===0){container.innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--muted)">No goals yet</div>';return;}
       goals.forEach(g=>{
-        const remaining = Math.max((g.target||0) - (g.saved||0), 0);
-        const pct = g.target>0 ? Math.min(100, Math.round((g.saved/g.target)*100)) : 0;
-        const card = document.createElement('div');
-        card.className = 'goal-card';
-        card.innerHTML = `
-          <button class="delete-icon" title="Delete goal" aria-label="Delete" onclick="deleteGoal(${g.id})">🗑</button>
-          <div class="goal-title">🎯 ${escapeHtml(g.name)}</div>
-          <div class="muted">Target: ${formatEGP(Number(g.target||0))}</div>
-          <div class="muted">Saved: ${formatEGP(Number(g.saved||0))}</div>
-          <div class="muted">Remaining: ${formatEGP(Number(remaining))}</div>
-
+        const remaining=Math.max(g.target-g.saved,0);
+        const percent=g.target?Math.min(100,Math.round(g.saved/g.target*100)):0;
+        const card=document.createElement('div');
+        card.className='goal-card';
+        card.innerHTML=`
+          <button class="delete-icon" onclick="deleteGoal(${g.id})">🗑</button>
+          <div class="goal-title">🎯 ${g.name}</div>
+          <div class="muted">Target: ${g.target} EGP</div>
+          <div class="muted">Saved: ${g.saved} EGP</div>
+          <div class="muted">Remaining: ${remaining} EGP</div>
           <div class="progress-row">
-            <div class="bar-wrap" aria-hidden>
-              <div class="bar" style="width:${pct}%;background:${g.color};"></div>
-            </div>
-            <div class="percent">${pct}%</div>
+            <div class="bar-wrap"><div class="bar" style="width:${percent}%;background:${g.color};"></div></div>
+            <div class="percent">${percent}%</div>
           </div>
-
-          <div class="card-actions" style="margin-top:12px">
+          <div class="card-actions">
             <button class="btn-add" onclick="addSavings(${g.id})">+ Add</button>
             <button class="btn-edit" onclick="editGoal(${g.id})">✏️ Edit</button>
-          </div>
-        `;
+          </div>`;
         container.appendChild(card);
       });
     }
 
-    /* ---------- Unified Shortcut Handler ----------
-       Supported formats:
-         1) Comma format (recommended):
-            ?entry=goal,Laptop,10000,#10b981   -> create goal
-            ?entry=spend,200                   -> subtract 200 from first goal
-         2) Space format:
-            ?entry=goal Laptop 10000
-            ?entry=Laptop 1000                -> add 1000 to existing Laptop (preferred)
-    */
-    function handleShortcutEntry(){
+    // ✅ Shortcut handler
+    function handleShortcutEntry() {
       const params = new URLSearchParams(window.location.search);
-      const raw = params.get('entry');
-      if(!raw) return;
+      const entry = params.get("entry");
+      if (!entry) return;
 
-      const r = raw.trim();
-      const low = r.toLowerCase();
+      const parts = entry.trim().split(/\s+/);
+      const amount = Number(parts.pop());
+      const name = parts.join(" ");
 
-      // comma-style: "goal,Name,Target,#hex" or "spend,200"
-      if(r.includes(',')){
-        const parts = r.split(',').map(s=>s.trim()).filter(Boolean);
-        const cmd = parts[0].toLowerCase();
-        if(cmd === 'goal'){
-          // parts: ['goal','Name','1000','#hex']
-          let name = parts[1] || 'Untitled';
-          let target = Number(parts[2]) || 0;
-          let color = parts[3] || '#10b981';
-          if(name && target>0){
-            // if exists, do not duplicate — just alert and return
-            const found = goals.find(g => g.name.toLowerCase()===name.toLowerCase());
-            if(found){ alert('Goal already exists: ' + found.name); return; }
-            goals.push({id: uid(), name, target, saved:0, color});
-            saveData(); renderGoals(); alert('Goal added: ' + name);
-          }
-        } else if(cmd === 'spend'){
-          const amount = Number(parts[1]) || 0;
-          if(goals.length>0 && amount>0){ goals[0].saved = Math.max(0, (goals[0].saved||0) - amount); saveData(); renderGoals(); alert('Spend applied: ' + amount + ' EGP'); }
-        }
-        return;
-      }
+      if (!name || isNaN(amount)) return alert("Invalid shortcut input");
 
-      // space-style: "goal Name 1000" or "Name 1000"
-      const tokens = r.split(/\s+/);
-      const first = tokens[0].toLowerCase();
-
-      if(first === 'goal'){
-        const amount = Number(tokens.pop());
-        const name = tokens.slice(1).join(' ');
-        if(name && !isNaN(amount) && amount>0){
-          const found = goals.find(g => g.name.toLowerCase()===name.toLowerCase());
-          if(found){ alert('Goal already exists: ' + found.name); return; }
-          goals.push({id: uid(), name, target: amount, saved:0, color:'#10b981'});
-          saveData(); renderGoals(); alert('Goal added: ' + name);
-        }
-        return;
-      }
-
-      if(first === 'spend' || first === 'spending'){
-        const amount = Number(tokens[1]) || 0;
-        if(goals.length>0 && amount>0){ goals[0].saved = Math.max(0, (goals[0].saved||0) - amount); saveData(); renderGoals(); alert('Spend applied: ' + amount + ' EGP'); }
-        return;
-      }
-
-      // default: assume "Name 1000" -> add 1000 to existing Name; if not exist, create goal with target=1000
-      const amount = Number(tokens.pop());
-      const name = tokens.join(' ');
-      if(!name || isNaN(amount) || amount<=0) return;
-      const found = goals.find(g => g.name.toLowerCase()===name.toLowerCase());
-      if(found){
-        found.saved = (found.saved || 0) + amount;
-        saveData(); renderGoals(); alert(`Added ${amount} EGP to ${found.name}`);
+      let g = goals.find(x=>x.name.toLowerCase()===name.toLowerCase());
+      if (g) {
+        g.saved += amount;
+        alert(`Added ${amount} EGP to ${g.name}`);
       } else {
-        goals.push({id: uid(), name, target: amount, saved:0, color:'#10b981'});
-        saveData(); renderGoals(); alert('Created goal: ' + name);
+        goals.push({ id:uid(), name, target:amount, saved:0, color:"#10b981" });
+        alert(`Created goal ${name} with target ${amount} EGP`);
       }
+      saveData(); renderGoals();
     }
 
-    /* ---------- Init ---------- */
     loadData();
-    // run handler AFTER load so goals array is available
     handleShortcutEntry();
-
-    /* ---------- Service Worker registration ---------- */
-    if('serviceWorker' in navigator){
-      navigator.serviceWorker.register('./sw.js').catch(()=>{/* ignore registration error */});
-    }
   </script>
 </body>
 </html>
