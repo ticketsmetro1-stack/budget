@@ -2,135 +2,138 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Budget App</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Budget App</title>
 
   <!-- iOS Home Screen -->
   <link rel="apple-touch-icon" href="icon.png">
-  <meta name="apple-mobile-web-app-title" content="Budget">
+  <meta name="apple-mobile-web-app-title" content="BudgetEGP">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
-    h1, h2 { text-align: center; }
-    .section { margin: 20px 0; }
-    ul { list-style: none; padding: 0; }
-    li { background: #f0f0f0; margin: 5px 0; padding: 8px; border-radius: 6px; }
-    button { padding: 6px 12px; margin: 5px; }
-    input { padding: 6px; margin: 5px; }
+    h1 { text-align: center; }
+    .goal, .savings { margin: 20px 0; }
+    .progress { height: 25px; background: #ddd; border-radius: 5px; overflow: hidden; }
+    .bar { height: 100%; background: green; width: 0%; }
   </style>
 </head>
 <body>
-  <h1>💰 Budget Tracker</h1>
+  <h1>💰 Budget App (EGP)</h1>
 
-  <!-- Goals Section -->
-  <div class="section">
-    <h2>🎯 Goals</h2>
-    <input id="goal-name" placeholder="Goal name">
-    <input id="goal-target" type="number" placeholder="Target (EGP)">
-    <button onclick="addGoal()">Add Goal</button>
-    <ul id="goal-list"></ul>
+  <div class="goal">
+    <label>Goal Name: <input id="goalName" placeholder="e.g. Laptop"></label><br><br>
+    <label>Goal Amount (EGP): <input id="goalAmount" type="number"></label><br><br>
+    <button onclick="setGoal()">Set Goal</button>
   </div>
 
-  <!-- Spending Section -->
-  <div class="section">
-    <h2>💸 Spending</h2>
-    <input id="spend-title" placeholder="Item">
-    <input id="spend-amount" type="number" placeholder="Amount">
-    <button onclick="addSpending()">Add Spending</button>
-    <ul id="log-list"></ul>
+  <div class="savings" style="display:none;">
+    <h2 id="goalTitle"></h2>
+    <p>Target: <span id="goalTarget"></span> EGP</p>
+    <p>Saved: <span id="savedAmount">0</span> EGP</p>
+    <p>Remaining: <span id="remaining">0</span> EGP</p>
+    <div class="progress"><div class="bar" id="progressBar"></div></div>
+    <br>
+    <input id="addAmount" type="number" placeholder="Add amount (EGP)">
+    <button onclick="addSavings()">Add</button>
   </div>
 
   <script>
-    // --- State Management ---
-    let state = JSON.parse(localStorage.getItem("budgetState") || '{"goals":[],"logs":[]}');
+    let goal = { name: "", target: 0, saved: 0 };
 
-    function saveState() {
-      localStorage.setItem("budgetState", JSON.stringify(state));
-      render();
+    function saveData() {
+      localStorage.setItem("budgetApp", JSON.stringify(goal));
     }
 
-    function uid() { return Date.now() + "-" + Math.floor(Math.random()*1000); }
-    function nowISO() { return new Date().toISOString(); }
-
-    // --- Add Goal ---
-    function addGoal(name, target) {
-      if (!name) name = document.getElementById("goal-name").value.trim();
-      if (!target) target = Number(document.getElementById("goal-target").value);
-      if (!name || !target) return alert("⚠️ Fill in goal name and target");
-      state.goals.push({id:uid(), name, target, saved:0, created:nowISO()});
-      saveState();
-      document.getElementById("goal-name").value = "";
-      document.getElementById("goal-target").value = "";
-    }
-
-    // --- Add Spending ---
-    function addSpending(title, amount) {
-      if (!title) title = document.getElementById("spend-title").value.trim();
-      if (!amount) amount = Number(document.getElementById("spend-amount").value);
-      if (!title || !amount) return alert("⚠️ Fill in item and amount");
-      state.logs.push({id:uid(), title, amount:-Math.abs(amount), cat:title, note:"", t:nowISO()});
-      saveState();
-      document.getElementById("spend-title").value = "";
-      document.getElementById("spend-amount").value = "";
-    }
-
-    // --- Render UI ---
-    function render() {
-      const goalList = document.getElementById("goal-list");
-      goalList.innerHTML = "";
-      state.goals.forEach(g => {
-        const li = document.createElement("li");
-        li.textContent = `${g.name} — Target: ${g.target} EGP`;
-        goalList.appendChild(li);
-      });
-
-      const logList = document.getElementById("log-list");
-      logList.innerHTML = "";
-      state.logs.forEach(l => {
-        const li = document.createElement("li");
-        li.textContent = `${l.title}: ${-l.amount} EGP`;
-        logList.appendChild(li);
-      });
-    }
-    render();
-
-    // --- Shortcut Input Parser ---
-    const params = new URLSearchParams(window.location.search);
-    const entry = params.get("entry");
-    if (entry) {
-      const input = entry.trim();
-      const lower = input.toLowerCase();
-
-      if (lower.startsWith("goal")) {
-        const content = input.replace(/^goal\s*/i, "").trim();
-        if (content) {
-          const parts = content.split(" ");
-          const target = Number(parts.pop()) || 0;
-          const name = parts.join(" ") || "Untitled Goal";
-          addGoal(name, target);
-          alert(`✅ Goal added: ${name} (${target} EGP)`);
-        }
-      } else if (lower.startsWith("spend") || lower.startsWith("spending")) {
-        const content = input.replace(/^(spend|spending)\s*/i, "").trim();
-        if (content) {
-          const parts = content.split(" ");
-          const amount = Number(parts.pop()) || 0;
-          const cat = parts.join(" ") || "Other";
-          addSpending(cat, amount);
-          alert(`💸 Spending logged: ${amount} EGP on ${cat}`);
-        }
-      } else {
-        alert("⚠️ Could not understand: " + entry);
+    function loadData() {
+      const data = localStorage.getItem("budgetApp");
+      if (data) {
+        goal = JSON.parse(data);
+        if (goal.target > 0) showGoal();
       }
     }
 
-    // --- Register Service Worker ---
+    function setGoal() {
+      goal.name = document.getElementById("goalName").value;
+      goal.target = parseFloat(document.getElementById("goalAmount").value);
+      goal.saved = 0;
+      saveData();
+      showGoal();
+    }
+
+    function showGoal() {
+      document.querySelector(".savings").style.display = "block";
+      document.getElementById("goalTitle").innerText = "🎯 " + goal.name;
+      document.getElementById("goalTarget").innerText = goal.target;
+      updateProgress();
+    }
+
+    function addSavings(amountFromShortcut) {
+      let amount;
+      if (typeof amountFromShortcut === "number") {
+        amount = amountFromShortcut;
+      } else {
+        amount = parseFloat(document.getElementById("addAmount").value);
+      }
+      if (!isNaN(amount) && amount > 0) {
+        goal.saved += amount;
+        saveData();
+        updateProgress();
+        if (!amountFromShortcut) {
+          document.getElementById("addAmount").value = "";
+        }
+      }
+    }
+
+    function updateProgress() {
+      document.getElementById("savedAmount").innerText = goal.saved;
+      const remaining = Math.max(goal.target - goal.saved, 0);
+      document.getElementById("remaining").innerText = remaining;
+      const percent = Math.min((goal.saved / goal.target) * 100, 100);
+      document.getElementById("progressBar").style.width = percent + "%";
+    }
+
+    // --- Handle Shortcut input ---
+    function handleShortcutInput() {
+      const params = new URLSearchParams(window.location.search);
+      const entry = params.get("entry");
+      if (!entry) return;
+
+      const input = entry.trim().toLowerCase();
+
+      if (input.startsWith("goal")) {
+        // Example: "goal Laptop 5000"
+        const parts = entry.split(" ");
+        const name = parts[1] || "Untitled";
+        const target = parseFloat(parts[2]) || 0;
+        goal = { name, target, saved: 0 };
+        saveData();
+        showGoal();
+        alert("New goal set via Shortcut: " + name);
+      } else if (input.startsWith("spend") || input.startsWith("spending")) {
+        // Example: "spend 200"
+        const amount = parseFloat(entry.replace(/^(spend|spending)\s*/i, ""));
+        if (!isNaN(amount) && amount > 0) {
+          addSavings(amount);
+          alert("Added savings via Shortcut: " + amount + " EGP");
+        }
+      } else {
+        alert("Unrecognized Shortcut input: " + entry);
+      }
+    }
+
+    loadData();
+    handleShortcutInput();
+  </script>
+
+  <!-- Service Worker -->
+  <script>
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/budget/sw.js")
+      navigator.serviceWorker
+        .register("/sw.js")
         .then(() => console.log("✅ Service Worker registered"))
-        .catch(err => console.error("⚠️ Service Worker failed:", err));
+        .catch(err => console.error("⚠️ SW failed:", err));
     }
   </script>
 </body>
