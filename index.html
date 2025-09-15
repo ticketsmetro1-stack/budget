@@ -12,31 +12,103 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    h1 { text-align: center; }
-    .goal, .savings { margin: 20px 0; }
-    .progress { height: 25px; background: #ddd; border-radius: 5px; overflow: hidden; }
-    .bar { height: 100%; background: green; width: 0%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f7f8fa;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #2c3e50;
+    }
+    .card {
+      background: #fff;
+      border-radius: 15px;
+      padding: 20px;
+      margin: 15px auto;
+      max-width: 400px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    label {
+      font-size: 14px;
+      color: #555;
+      display: block;
+      margin-bottom: 6px;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 16px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #27ae60;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    button:hover {
+      background: #219150;
+    }
+    .progress {
+      height: 25px;
+      background: #ddd;
+      border-radius: 15px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+    .bar {
+      height: 100%;
+      background: linear-gradient(90deg, #27ae60, #2ecc71);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      font-size: 14px;
+      color: #444;
+    }
   </style>
 </head>
 <body>
-  <h1>💰 Budget App (EGP)</h1>
+  <h1>💰 Budget App</h1>
 
-  <div class="goal">
-    <label>Goal Name: <input id="goalName" placeholder="e.g. Laptop"></label><br><br>
-    <label>Goal Amount (EGP): <input id="goalAmount" type="number"></label><br><br>
+  <div class="card goal">
+    <label>Goal Name</label>
+    <input id="goalName" placeholder="e.g. Laptop">
+
+    <label>Goal Amount (EGP)</label>
+    <input id="goalAmount" type="number" placeholder="5000">
+
     <button onclick="setGoal()">Set Goal</button>
   </div>
 
-  <div class="savings" style="display:none;">
+  <div class="card savings" style="display:none;">
     <h2 id="goalTitle"></h2>
-    <p>Target: <span id="goalTarget"></span> EGP</p>
-    <p>Saved: <span id="savedAmount">0</span> EGP</p>
-    <p>Remaining: <span id="remaining">0</span> EGP</p>
+    <div class="stats">
+      <div>Target: <span id="goalTarget"></span> EGP</div>
+      <div>Saved: <span id="savedAmount">0</span> EGP</div>
+    </div>
+    <div class="stats">
+      <div>Remaining: <span id="remaining">0</span> EGP</div>
+    </div>
     <div class="progress"><div class="bar" id="progressBar"></div></div>
     <br>
     <input id="addAmount" type="number" placeholder="Add amount (EGP)">
-    <button onclick="addSavings()">Add</button>
+    <button onclick="addSavings()">Add Savings</button>
   </div>
 
   <script>
@@ -103,7 +175,6 @@
       const input = entry.trim().toLowerCase();
 
       if (input.startsWith("goal")) {
-        // Example: "goal Laptop 5000"
         const parts = entry.split(" ");
         const name = parts[1] || "Untitled";
         const target = parseFloat(parts[2]) || 0;
@@ -112,14 +183,11 @@
         showGoal();
         alert("New goal set via Shortcut: " + name);
       } else if (input.startsWith("spend") || input.startsWith("spending")) {
-        // Example: "spend 200"
         const amount = parseFloat(entry.replace(/^(spend|spending)\s*/i, ""));
         if (!isNaN(amount) && amount > 0) {
           addSavings(amount);
           alert("Added savings via Shortcut: " + amount + " EGP");
         }
-      } else {
-        alert("Unrecognized Shortcut input: " + entry);
       }
     }
 
