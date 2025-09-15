@@ -4,83 +4,69 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Budget App</title>
-
-  <!-- iOS Web App -->
-  <link rel="apple-touch-icon" href="icon.png">
-  <meta name="apple-mobile-web-app-title" content="Budget App">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-
+  <link rel="manifest" href="manifest.json">
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; background:#f6f7fb; }
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
     h1 { text-align: center; }
-
-    #goalContainer {
-      display: flex;
+    .goal-form { margin: 20px auto; max-width: 400px; padding: 15px; background: white; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    .goal-form input, .goal-form select, .goal-form button {
+      margin: 8px 0; padding: 10px; width: 100%; border-radius: 5px; border: 1px solid #ccc;
+    }
+    .goals-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 15px;
-      overflow-x: auto;
-      padding: 10px 0;
+      margin-top: 20px;
     }
-
-    .goalCard {
-      flex: 0 0 250px;
-      background: white;
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    .goal-card {
+      background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
-
-    .goalCard h2 { font-size: 18px; margin: 0 0 10px; }
-
-    .progress { height: 12px; background: #ddd; border-radius: 6px; overflow: hidden; }
-    .bar { height: 100%; width: 0%; }
-
-    .form-section { margin: 20px 0; }
-
-    @media (max-width: 600px) {
-      #goalContainer {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-      }
-      .goalCard { flex: none; width: auto; }
-    }
+    .progress { height: 20px; background: #ddd; border-radius: 5px; overflow: hidden; margin: 10px 0; }
+    .bar { height: 100%; width: 0%; transition: width 0.3s ease-in-out; }
+    .actions button { margin: 5px 5px 0 0; padding: 6px 10px; border: none; border-radius: 5px; cursor: pointer; }
+    .actions .edit { background: #f0ad4e; color: white; }
+    .actions .delete { background: #d9534f; color: white; }
   </style>
 </head>
 <body>
   <h1>💰 Budget App (EGP)</h1>
 
-  <div class="form-section">
-    <label>Goal Name: <input id="goalName" placeholder="e.g. Laptop"></label><br><br>
-    <label>Goal Amount (EGP): <input id="goalAmount" type="number"></label><br><br>
-    <label>Color: <input id="goalColor" type="color" value="#4caf50"></label><br><br>
+  <div class="goal-form">
+    <input id="goalName" placeholder="Goal name (e.g. Laptop)">
+    <input id="goalAmount" type="number" placeholder="Goal amount (EGP)">
+    <select id="goalColor">
+      <option value="green">Green</option>
+      <option value="blue">Blue</option>
+      <option value="purple">Purple</option>
+      <option value="orange">Orange</option>
+      <option value="red">Red</option>
+    </select>
     <button onclick="addGoal()">Add Goal</button>
   </div>
 
-  <div id="goalContainer"></div>
+  <div class="goals-container" id="goalsContainer"></div>
 
   <script>
     let goals = [];
 
     function saveData() {
-      localStorage.setItem("budgetAppGoals", JSON.stringify(goals));
+      localStorage.setItem("budgetGoals", JSON.stringify(goals));
     }
 
     function loadData() {
-      const data = localStorage.getItem("budgetAppGoals");
-      if (data) {
-        goals = JSON.parse(data);
-        renderGoals();
-      }
+      const data = localStorage.getItem("budgetGoals");
+      if (data) goals = JSON.parse(data);
+      renderGoals();
     }
 
     function addGoal() {
       const name = document.getElementById("goalName").value;
-      const target = parseFloat(document.getElementById("goalAmount").value);
+      const amount = parseFloat(document.getElementById("goalAmount").value);
       const color = document.getElementById("goalColor").value;
 
-      if (!name || isNaN(target)) return alert("Please enter goal name and amount");
+      if (!name || isNaN(amount) || amount <= 0) return alert("Enter valid goal");
 
-      goals.push({ name, target, saved: 0, color });
+      goals.push({ id: Date.now(), name, target: amount, saved: 0, color });
       saveData();
       renderGoals();
 
@@ -88,69 +74,58 @@
       document.getElementById("goalAmount").value = "";
     }
 
-    function addSavings(index, amount) {
-      if (amount <= 0) return;
-      goals[index].saved += amount;
+    function addSavings(id) {
+      const amount = parseFloat(prompt("Enter amount to add:"));
+      if (isNaN(amount) || amount <= 0) return;
+      const goal = goals.find(g => g.id === id);
+      goal.saved += amount;
+      saveData();
+      renderGoals();
+    }
+
+    function editGoal(id) {
+      const goal = goals.find(g => g.id === id);
+      const newName = prompt("Edit goal name:", goal.name);
+      const newTarget = parseFloat(prompt("Edit target amount:", goal.target));
+      if (newName) goal.name = newName;
+      if (!isNaN(newTarget) && newTarget > 0) goal.target = newTarget;
+      saveData();
+      renderGoals();
+    }
+
+    function deleteGoal(id) {
+      goals = goals.filter(g => g.id !== id);
       saveData();
       renderGoals();
     }
 
     function renderGoals() {
-      const container = document.getElementById("goalContainer");
+      const container = document.getElementById("goalsContainer");
       container.innerHTML = "";
-
-      goals.forEach((goal, i) => {
-        const remaining = Math.max(goal.target - goal.saved, 0);
+      goals.forEach(goal => {
         const percent = Math.min((goal.saved / goal.target) * 100, 100);
-
-        const card = document.createElement("div");
-        card.className = "goalCard";
-        card.innerHTML = `
-          <h2>${goal.name}</h2>
-          <p>Target: ${goal.target} EGP</p>
-          <p>Saved: ${goal.saved} EGP</p>
-          <p>Remaining: ${remaining} EGP</p>
-          <div class="progress"><div class="bar" style="width:${percent}%;background:${goal.color};"></div></div>
-          <br>
-          <input type="number" id="add-${i}" placeholder="Add amount (EGP)">
-          <button onclick="addSavings(${i}, parseFloat(document.getElementById('add-${i}').value))">Add</button>
+        container.innerHTML += `
+          <div class="goal-card">
+            <h3>🎯 ${goal.name}</h3>
+            <p>Target: ${goal.target} EGP</p>
+            <p>Saved: ${goal.saved} EGP</p>
+            <p>Remaining: ${Math.max(goal.target - goal.saved, 0)} EGP</p>
+            <div class="progress"><div class="bar" style="width:${percent}%; background:${goal.color};"></div></div>
+            <div class="actions">
+              <button onclick="addSavings(${goal.id})">+ Add</button>
+              <button class="edit" onclick="editGoal(${goal.id})">✏️ Edit</button>
+              <button class="delete" onclick="deleteGoal(${goal.id})">🗑 Delete</button>
+            </div>
+          </div>
         `;
-        container.appendChild(card);
       });
     }
 
-    // Handle Shortcut input
-    const params = new URLSearchParams(window.location.search);
-    const entry = params.get("entry");
-    if (entry) {
-      const input = entry.trim().toLowerCase();
-      if (input.startsWith("goal")) {
-        const parts = entry.split(",");
-        const name = parts[0].replace(/^goal\s*/i, "").trim();
-        const target = parseFloat(parts[1] || "0");
-        const color = parts[2] || "#2196f3";
-        goals.push({ name, target, saved: 0, color });
-        saveData();
-      } else if (input.startsWith("spend")) {
-        const parts = entry.split(",");
-        const amount = parseFloat(parts[1] || "0");
-        if (goals.length > 0 && amount > 0) {
-          goals[0].saved = Math.max(0, goals[0].saved - amount);
-          saveData();
-        }
-      }
-    }
-
     loadData();
-  </script>
 
-  <!-- Offline support -->
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker
-        .register("sw.js")
-        .then(() => console.log("✅ Service Worker registered"))
-        .catch(err => console.error("⚠️ SW error:", err));
+    // Offline support
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
     }
   </script>
 </body>
