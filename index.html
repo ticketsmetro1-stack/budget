@@ -430,15 +430,41 @@ render();
       .catch((err) => console.error("⚠️ Service Worker failed:", err));
   }
 </script>
-  <script>
+ <script>
+  // Get text passed from Shortcut
   const params = new URLSearchParams(window.location.search);
   const entry = params.get("entry");
 
   if (entry) {
-    // Example: auto-fill an input field if it exists
-    const box = document.getElementById("myInput");
-    if (box) {
-      box.value = entry;
+    // Normalize input
+    const input = entry.trim().toLowerCase();
+
+    // Example logic
+    if (input.startsWith("goal")) {
+      addGoal(entry.replace(/^goal\s*/i, ""));
+    } else if (input.startsWith("spend") || input.startsWith("spending")) {
+      addSpending(entry.replace(/^(spend|spending)\s*/i, ""));
+    } else {
+      alert("Unrecognized input: " + entry);
+    }
+  }
+
+  // Example functions — you should replace with your own logic
+  function addGoal(text) {
+    const list = document.getElementById("goals");
+    if (list) {
+      const li = document.createElement("li");
+      li.textContent = text;
+      list.appendChild(li);
+    }
+  }
+
+  function addSpending(text) {
+    const list = document.getElementById("spending");
+    if (list) {
+      const li = document.createElement("li");
+      li.textContent = text;
+      list.appendChild(li);
     }
   }
 </script>
